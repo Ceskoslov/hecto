@@ -21,6 +21,7 @@ pub enum EditorCommand {
     Backspace,
     Delete,
     Enter,
+    Save,
 }
 
 #[allow(clippy::as_conversions)]
@@ -47,6 +48,7 @@ impl TryFrom<Event> for EditorCommand {
                 (KeyCode::Delete, _) => Ok(Self::Delete),
                 (KeyCode::Enter, _) => Ok(Self::Enter),
                 (KeyCode::Tab, _) => Ok(Self::Insert('\t')),
+                (KeyCode::Char('s'), KeyModifiers::CONTROL) => Ok(Self::Save),
                 _ => Err(format!("Key Code not supported: {code:?}")),
             },
             Event::Resize(width_u16, height_u16) => Ok(Self::Resize(Size{
