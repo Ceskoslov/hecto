@@ -1,4 +1,4 @@
-use std::cmp::min;
+use std::{cmp::min, io::Error};
 
 use self::line::Line;
 
@@ -56,11 +56,11 @@ impl View {
             EditorCommand::Quit => {}
         }
     }
-    pub fn load(&mut self, file_name: &str) {
-        if let Ok(buffer) = Buffer::load(file_name) {
-            self.buffer = buffer;
-            self.needs_redraw = true;
-        }
+    pub fn load(&mut self, file_name: &str) -> Result<(), Error> {
+        let buffer = Buffer::load(file_name)?;
+        self.buffer = buffer;
+        self.needs_redraw = true;
+        Ok(())
     }
     pub fn get_position(&self) -> Position {
         self.location.subtract(&self.scroll_offset).into()

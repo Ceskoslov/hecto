@@ -28,7 +28,7 @@ impl Editor {
         let mut view = View::default();
         let args: Vec<String> = env::args().collect();
         if let Some(file_name) = args.get(1) {
-            view.load(file_name);
+            view.load(file_name)?;
         }
         Ok(Self {
             should_quit: false,
