@@ -28,7 +28,7 @@ impl Editor {
         let mut view = View::default();
         let args: Vec<String> = env::args().collect();
         if let Some(file_name) = args.get(1) {
-            view.load(file_name)?;
+            view.load(file_name);
         }
         Ok(Self {
             should_quit: false,
@@ -85,7 +85,7 @@ impl Editor {
     fn refresh_screen(&mut self) {
         let _ = Terminal::hide_caret();
         self.view.render();
-        let _ = Terminal::move_caret_to(self.view.get_position());
+        let _ = Terminal::move_caret_to(self.view.caret_position());
         let _ = Terminal::show_caret();
         let _ = Terminal::execute();
     }
