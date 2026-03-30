@@ -1,11 +1,13 @@
 use crossterm::event::{read, Event, KeyEvent, KeyEventKind};
 use std::{
-    ascii::escape_default, env, io::Error, panic::{set_hook, take_hook}
+    env,
+    io::Error,
+    panic::{set_hook, take_hook},
 };
 mod editorcommand;
 mod terminal;
 mod view;
-use terminal::{Terminal};
+use terminal::Terminal;
 use view::View;
 
 use editorcommand::EditorCommand;
@@ -56,34 +58,29 @@ impl Editor {
     // function would be needlessly complicated if we pass by reference here.
     #[allow(clippy::needless_pass_by_value)]
     fn evaluate_event(&mut self, event: Event) {
-        let should_process = match &event{
+        let should_process = match &event {
             Event::Key(KeyEvent { kind, .. }) => kind == &KeyEventKind::Press,
-            Event::Resize(_,_) => true,
+            Event::Resize(_, _) => true,
             _ => false,
         };
 
         if should_process {
             match EditorCommand::try_from(event) {
                 Ok(command) => {
-                    if matches!(command, EditorCommand::Quit){
+                    if matches!(command, EditorCommand::Quit) {
                         self.should_quit = true;
-                    }else {
+                    } else {
                         self.view.handle_command(command);
                     }
                 }
                 Err(err) => {
                     #[cfg(debug_assertions)]
                     {
-                        panic!("Could not convert event to command: {err}");
+                        panic!("Could not handle command: {err}");
                     }
                 }
             }
-        } else {
-            #[cfg(debug_assertions)]
-            {
-                panic!("Received unsupported event: {event:?}");
-            }
-        }
+        } 
     }
     fn refresh_screen(&mut self) {
         let _ = Terminal::hide_caret();

@@ -20,6 +20,6 @@ impl Location {
         Self {
             x: self.x.saturating_sub(other.x),
             y: self.y.saturating_sub(other.y),
-        }    
+        }
     }
 }
