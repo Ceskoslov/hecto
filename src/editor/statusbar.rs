@@ -9,7 +9,7 @@ use super::{
 #[derive(Default)]
 pub struct StatusBar {
     current_status: DocumentStatus,
-    need_redraw: bool,
+    needs_redraw: bool,
     size: Size,
 }
 
@@ -18,18 +18,18 @@ impl StatusBar {
     pub fn update_status(&mut self, status: DocumentStatus){
         if self.current_status != status {
             self.current_status = status;
-            self.mark_redraw(true);
+            self.set_needs_redraw(true);
         }
     }
 }
 
 impl UIComponent for StatusBar {
-    fn mark_redraw(&mut self, value: bool) {
-        self.need_redraw = value;
+    fn set_needs_redraw(&mut self, value: bool) {
+        self.needs_redraw = value;
     }
 
-    fn need_redraw(&self) -> bool {
-        self.need_redraw
+    fn needs_redraw(&self) -> bool {
+        self.needs_redraw
     }
 
     fn set_size(&mut self, size: Size) {
