@@ -33,8 +33,8 @@ pub struct MessageBar {
 }
 
 impl MessageBar {
-    pub fn update_message(&mut self, new_message: String) {
-        self.current_message = Message { text: new_message, time: Instant::now() };
+    pub fn update_message(&mut self, new_message: &str) {
+        self.current_message = Message { text: new_message.to_string(), time: Instant::now() };
         self.cleared_after_expiry = false;
         self.set_needs_redraw(true);
     }
