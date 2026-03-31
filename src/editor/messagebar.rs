@@ -1,8 +1,7 @@
 use std::{time::{Duration,Instant},io::Error};
 
 use super::{
-    terminal::{Size, Terminal},
-    uicomponent::UIComponent,
+    Size, Terminal,UIComponent,
 };
 
 const DEFAULT_DURATION: Duration = Duration::new(5, 0);

@@ -1,9 +1,7 @@
 use std::io::Error;
 
 use super::{
-    terminal::{Terminal, Size},
-    uicomponent::UIComponent,
-    DocumentStatus,
+    DocumentStatus, Size, Terminal, UIComponent,
 };
 
 #[derive(Default)]
@@ -36,7 +34,7 @@ impl UIComponent for StatusBar {
         self.size = size;
     }
 
-    fn draw(&mut self, origin_y: usize) -> Result<(), Error> {
+    fn draw(&mut self, origin_row: usize) -> Result<(), Error> {
         let line_count = self.current_status.line_count_to_string();
         let modified_indicator = self.current_status.modified_indicator_to_string();
         let beginning = format!("{} -{line_count}{modified_indicator}", self.current_status.file_name);
@@ -50,7 +48,7 @@ impl UIComponent for StatusBar {
         } else {
             String::new()
         };
-        Terminal::print_inverted_row(origin_y, &to_print)?;
+        Terminal::print_inverted_row(origin_row, &to_print)?;
         Ok(())
     }
 }
