@@ -37,6 +37,7 @@ pub struct Line {
 
 impl Line {
     pub fn from(line_str: &str) -> Self {
+        debug_assert!(line_str.is_empty() || line_str.lines().count() == 1, "Line::from should only be used with single-line strings");
         let fragments = Self::str_to_fragments(line_str);
         Self { fragments, string: String::from(line_str) }
     }
@@ -135,6 +136,7 @@ impl Line {
     }
 
     pub fn insert_char(&mut self, character: char, at: GraphemeIndex) {
+        debug_assert!(at.saturating_sub(1) <= self.grapheme_count(), "Insertion index is out of bounds");
         if let Some(fragment) = self.fragments.get(at) {
             self.string.insert(fragment.start_byte_index, character);
         } else {
@@ -147,6 +149,7 @@ impl Line {
     }
 
     pub fn delete(&mut self, at: GraphemeIndex){
+        debug_assert!(at <= self.grapheme_count(), "Deletion index is out of bounds");
         if let Some(fragment) = self.fragments.get(at) {
             let start = fragment.start_byte_index;
             let end = fragment.start_byte_index.saturating_add(fragment.grapheme.len());
@@ -175,22 +178,58 @@ impl Line {
     }
 
     fn byte_index_to_grapheme_index(&self, byte_index: ByteIndex) -> GraphemeIndex {
+        debug_assert!(byte_index <= self.string.len(), "Byte index is out of bounds");
         self.fragments
             .iter()
             .position(|fragment| fragment.start_byte_index >= byte_index)
-            .map_or(0, |grapheme_idx| grapheme_idx)
+            .map_or_else(||{
+                #[cfg(debug_assertions)]
+                {
+                    panic!("Byte index is out of bounds: {byte_index} > {}", self.string.len());
+                }
+                #[cfg(not(debug_assertions))]
+                {
+                    0
+                }
+            }, |grapheme_index| grapheme_index)
     }
 
     fn grapheme_index_to_byte_index(&self, grapheme_index: GraphemeIndex) -> ByteIndex {
-        self.fragments
-            .get(grapheme_index)
-            .map_or(0, |fragment| fragment.start_byte_index)
+        debug_assert!(grapheme_index <= self.grapheme_count());
+        if grapheme_index == 0 || self.grapheme_count() == 0 {
+            return 0;
+        }
+        self.fragments.get(grapheme_index).map_or_else(
+            || {
+                #[cfg(debug_assertions)]
+                {
+                    panic!("Fragment not found for grapheme index: {grapheme_index:?}");
+                }
+                #[cfg(not(debug_assertions))]
+                {
+                    0
+                }
+            },
+            |fragment| fragment.start_byte_index,
+        )
     }
 
-    pub fn search(&self, query: &str, from_grapheme_idx: GraphemeIndex) -> Option<GraphemeIndex> {
+    pub fn search_forward(&self, query: &str, from_grapheme_idx: GraphemeIndex) -> Option<GraphemeIndex> {
+        debug_assert!(from_grapheme_idx <= self.grapheme_count(), "Search start index is out of bounds");
+        if from_grapheme_idx == self.grapheme_count() {
+            return None;
+        }
         let start_byte_index = self.grapheme_index_to_byte_index(from_grapheme_idx);
         self.string.get(start_byte_index..).and_then(|substr| substr.find(query)).map(|byte_index| self.byte_index_to_grapheme_index(byte_index.saturating_add(start_byte_index)))
+    }
 
+    pub fn search_backward(&self, query: &str, from_grapheme_idx: GraphemeIndex) -> Option<GraphemeIndex> {
+        debug_assert!(from_grapheme_idx <= self.grapheme_count(), "Search start index is out of bounds");
+        if from_grapheme_idx == 0 {
+            return None;
+        }
+        let end_byte_index = self.grapheme_index_to_byte_index(from_grapheme_idx);
+        self.string.get(..end_byte_index).and_then(|substr| substr.rfind(query)).map(|byte_index| self.byte_index_to_grapheme_index(byte_index))
     }
 }
 
