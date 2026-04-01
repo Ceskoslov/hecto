@@ -1,8 +1,11 @@
-use std::{time::{Duration,Instant},io::Error};
-
-use super::{
-    Size, Terminal,UIComponent,
+use std::{
+    io::Error,
+    time::{Duration, Instant},
 };
+
+use super::super::{Size, Terminal};
+
+use super::UIComponent;
 
 const DEFAULT_DURATION: Duration = Duration::new(5, 0);
 
@@ -13,7 +16,10 @@ struct Message {
 
 impl Default for Message {
     fn default() -> Self {
-        Self { text: String::new(), time: Instant::now() }
+        Self {
+            text: String::new(),
+            time: Instant::now(),
+        }
     }
 }
 
@@ -22,7 +28,6 @@ impl Message {
         Instant::now().duration_since(self.time) > DEFAULT_DURATION
     }
 }
-
 
 #[derive(Default)]
 pub struct MessageBar {
@@ -33,7 +38,10 @@ pub struct MessageBar {
 
 impl MessageBar {
     pub fn update_message(&mut self, new_message: &str) {
-        self.current_message = Message { text: new_message.to_string(), time: Instant::now() };
+        self.current_message = Message {
+            text: new_message.to_string(),
+            time: Instant::now(),
+        };
         self.cleared_after_expiry = false;
         self.set_needs_redraw(true);
     }

@@ -1,24 +1,21 @@
 use std::{cmp::min, io::Error};
 
-use super::{
+use super::super::{
+    Col, DocumentStatus, Line, NAME, Position, Row, Size, Terminal, VERSION,
     command::{Edit, Move},
-    Col, DocumentStatus, Line, Position, Row, Size, Terminal, UIComponent, NAME, VERSION,
 };
+
+use super::UIComponent;
 mod buffer;
 use buffer::Buffer;
+mod searchdirection;
+use searchdirection::SearchDirection;
 mod location;
 use location::Location;
 mod fileinfo;
 use fileinfo::FileInfo;
 mod searchinfo;
 use searchinfo::SearchInfo;
-
-#[derive(Default, Eq, PartialEq, Clone, Copy)]
-pub enum SearchDirection {
-    #[default]
-    Forward,
-    Backward,
-}
 
 #[derive(Default)]
 pub struct View {
@@ -54,6 +51,7 @@ impl View {
     }
     pub fn exit_search(&mut self) {
         self.search_info = None;
+        self.set_needs_redraw(true);
     }
     pub fn dismiss_search(&mut self) {
         if let Some(search_info) = &self.search_info {
@@ -62,6 +60,7 @@ impl View {
             self.scroll_text_location_into_view();
         }
         self.search_info = None;
+        self.set_needs_redraw(true);
     }
 
     pub fn search(&mut self, query: &str) {
@@ -72,8 +71,14 @@ impl View {
     }
 
     fn get_search_query(&self) -> Option<&Line> {
-        let query = self.search_info.as_ref().and_then(|search_info|  search_info.query.as_ref());
-        debug_assert!(query.is_some(), "get_search_query should only be called when a search query is set");
+        let query = self
+            .search_info
+            .as_ref()
+            .and_then(|search_info| search_info.query.as_ref());
+        debug_assert!(
+            query.is_some(),
+            "get_search_query should only be called when a search query is set"
+        );
         query
     }
     fn search_in_direction(&mut self, from: Location, direction: SearchDirection) {
@@ -84,15 +89,17 @@ impl View {
                 self.buffer.search_forward(query, from)
             } else {
                 self.buffer.search_backward(query, from)
-
             }
-            }) {
+        }) {
             self.text_location = location;
             self.center_text_location();
         };
+        self.set_needs_redraw(true);
     }
     pub fn search_next(&mut self) {
-        let step_right = self.get_search_query().map_or(1, |query| min(1, query.grapheme_count()));
+        let step_right = self
+            .get_search_query()
+            .map_or(1, |query| min(1, query.grapheme_count()));
         let location = Location {
             line_idx: self.text_location.line_idx,
             grapheme_idx: self.text_location.grapheme_idx.saturating_add(step_right), //Start the new search behind the current match
@@ -263,7 +270,10 @@ impl View {
 
     fn text_location_to_position(&self) -> Position {
         let row = self.text_location.line_idx;
-        debug_assert!(row.saturating_sub(1) <= self.buffer.lines.len(), "text_location.line_idx is out of bounds");
+        debug_assert!(
+            row.saturating_sub(1) <= self.buffer.lines.len(),
+            "text_location.line_idx is out of bounds"
+        );
         let col = self
             .buffer
             .lines
@@ -371,7 +381,16 @@ impl UIComponent for View {
             if let Some(line) = self.buffer.lines.get(line_idx) {
                 let left = self.scroll_offset.col;
                 let right = self.scroll_offset.col.saturating_add(width);
-                Self::render_line(current_row, &line.get_visible_graphemes(left..right))?;
+                let query = self
+                    .search_info
+                    .as_ref()
+                    .and_then(|search_info| search_info.query.as_deref());
+                let selected_match = (self.text_location.line_idx == line_idx && query.is_some())
+                    .then_some(self.text_location.grapheme_idx);
+                Terminal::print_annotated_row(
+                    current_row,
+                    &line.get_annotated_visible_substr(left..right, query, selected_match),
+                )?;
             } else if current_row == top_third && self.buffer.is_empty() {
                 Self::render_line(current_row, &Self::build_welcome_message(width))?;
             } else {

@@ -1,6 +1,7 @@
 use std::{cmp::min, io::Error};
 
-use super::{command::Edit, Line, Size, Terminal, UIComponent};
+use super::super::{Line, Size, Terminal, command::Edit};
+use super::UIComponent;
 
 #[derive(Default)]
 pub struct CommandBar {
@@ -14,7 +15,7 @@ impl CommandBar {
     pub fn handle_edit_command(&mut self, command: Edit) {
         match command {
             Edit::Insert(character) => self.value.append_char(character),
-            Edit::Delete | Edit::InsertNewline=> {}
+            Edit::Delete | Edit::InsertNewline => {}
             Edit::DeleteBackward => self.value.delete_last(),
         }
         self.set_needs_redraw(true);
