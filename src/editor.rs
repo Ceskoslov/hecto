@@ -1,4 +1,4 @@
-use crossterm::event::{self, Event, KeyEvent, KeyEventKind, read};
+use crossterm::event::{Event, KeyEvent, KeyEventKind, read};
 use std::{
     env,
     io::Error,
@@ -20,7 +20,7 @@ use commandbar::CommandBar;
 use documentstatus::DocumentStatus;
 use line::Line;
 use messagebar::MessageBar;
-use position::Position;
+use position::{Col, Position, Row};
 use size::Size;
 use statusbar::StatusBar;
 use terminal::Terminal;
@@ -31,6 +31,7 @@ use view::View;
 use self::command::{
     Command::{self, Edit, Move, System},
     Edit::InsertNewline,
+    Move::{Down, Right},
     System::{Dismiss, Quit, Resize, Save, Search},
 };
 pub const NAME: &str = env!("CARGO_PKG_NAME");
@@ -248,13 +249,21 @@ impl Editor {
 
     fn process_command_during_search(&mut self, command: Command){
         match command {
-            System(Quit | Resize(_) | Search | Save) | Move(_) => {},
-            System(Dismiss) | Edit(InsertNewline) => {
+            System(Dismiss)  => {
                 self.set_prompt(PromptType::None);
+                self.view.dismiss_search();
             },
+            Edit(InsertNewline) => {
+                self.set_prompt(PromptType::None);
+                self.view.exit_search();
+            }
             Edit(edit_command) => {
                 self.command_bar.handle_edit_command(edit_command);
+                let query = self.command_bar.value();
+                self.view.search(&query);
             },
+            Move(Right | Down) => self.view.search_next(),
+            System(Quit | Resize(_) | Save| Search) | Move(_) => {},
         }
     }
 
@@ -270,7 +279,10 @@ impl Editor {
         match prompt_type {
             PromptType::None => self.message_bar.set_needs_redraw(true),
             PromptType::Save => self.command_bar.set_prompt("Save as: "),
-            PromptType::Search => self.command_bar.set_prompt("Search: "),
+            PromptType::Search => {
+                self.view.enter_search();
+                self.command_bar.set_prompt("Search(Esc to cancel, Arrows to navigate): ");
+            }
         }
     }
 }
