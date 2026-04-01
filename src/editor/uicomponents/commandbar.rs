@@ -1,6 +1,8 @@
 use std::{cmp::min, io::Error};
 
-use super::super::{Line, Size, Terminal, command::Edit};
+use crate::prelude::*;
+
+use super::super::{Line, Terminal, command::Edit};
 use super::UIComponent;
 
 #[derive(Default)]
@@ -20,7 +22,7 @@ impl CommandBar {
         }
         self.set_needs_redraw(true);
     }
-    pub fn caret_position_col(&self) -> usize {
+    pub fn caret_position_col(&self) -> ColIdx {
         let max_width = self
             .prompt
             .len()
@@ -51,7 +53,7 @@ impl UIComponent for CommandBar {
     fn set_size(&mut self, size: Size) {
         self.size = size;
     }
-    fn draw(&mut self, origin: usize) -> Result<(), Error> {
+    fn draw(&mut self, origin: RowIdx) -> Result<(), Error> {
         let area_for_value = self.size.width.saturating_sub(self.prompt.len()); //this is how much space there is between the right side of the prompt and the edge of the bar
         let value_end = self.value.width(); // we always want to show the left part of the value, therefore the end of the visible range we try to access will be equal to the full width
         let value_start = value_end.saturating_sub(area_for_value); //This should give us the start for the grapheme subrange we want to print out.

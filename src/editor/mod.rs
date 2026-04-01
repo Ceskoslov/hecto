@@ -1,3 +1,4 @@
+use crate::prelude::*;
 use crossterm::event::{Event, KeyEvent, KeyEventKind, read};
 use std::{
     env,
@@ -6,24 +7,17 @@ use std::{
 };
 mod annotatedstring;
 mod command;
-mod uicomponents;
 mod documentstatus;
 mod line;
-mod position;
-mod size;
 mod terminal;
+mod uicomponents;
 
 use annotatedstring::{AnnotatedString, AnnotationType};
-use uicomponents::{
-    CommandBar, MessageBar, StatusBar, View, UIComponent,
-};
 use documentstatus::DocumentStatus;
 use line::Line;
-use position::{Col, Position, Row};
-use size::Size;
+
 use terminal::Terminal;
-
-
+use uicomponents::{CommandBar, MessageBar, StatusBar, UIComponent, View};
 
 use self::command::{
     Command::{self, Edit, Move, System},
@@ -31,8 +25,6 @@ use self::command::{
     Move::{Down, Left, Right, Up},
     System::{Dismiss, Quit, Resize, Save, Search},
 };
-pub const NAME: &str = env!("CARGO_PKG_NAME");
-pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 const QUIT_TIMES: u8 = 3;
 
@@ -49,7 +41,6 @@ impl PromptType {
         *self == Self::None
     }
 }
-
 
 #[derive(Default)]
 pub struct Editor {
@@ -110,7 +101,7 @@ impl Editor {
         }
     }
 
-    fn refresh_screen(&mut self){
+    fn refresh_screen(&mut self) {
         if self.terminal_size.height == 0 || self.terminal_size.width == 0 {
             return;
         }
@@ -122,13 +113,14 @@ impl Editor {
             self.message_bar.render(bottom_bar_row);
         }
         if self.terminal_size.height > 1 {
-            self.status_bar.render(self.terminal_size.height.saturating_sub(2));
+            self.status_bar
+                .render(self.terminal_size.height.saturating_sub(2));
         }
         if self.terminal_size.height > 2 {
             self.view.render(0);
         }
         let new_caret_pos = if self.in_prompt() {
-            Position{
+            Position {
                 row: bottom_bar_row,
                 col: self.command_bar.caret_position_col(),
             }
@@ -177,13 +169,13 @@ impl Editor {
     }
 
     fn process_command_no_prompt(&mut self, command: Command) {
-        if matches!(command, System(Quit)){
+        if matches!(command, System(Quit)) {
             self.handle_quit_command();
             return;
         }
         self.reset_quit_times();
         match command {
-            System(Quit | Resize(_) | Dismiss) => {},
+            System(Quit | Resize(_) | Dismiss) => {}
             System(Search) => self.set_prompt(PromptType::Search),
             System(Save) => self.handle_save_command(),
             Edit(edit_command) => self.view.handle_edit_command(edit_command),
@@ -193,15 +185,21 @@ impl Editor {
 
     fn handle_resize_command(&mut self, size: Size) {
         self.terminal_size = size;
-        self.view.resize(Size { height: size.height.saturating_sub(2), width: size.width });
-        let bar_size = Size { height: 1, width: size.width };
+        self.view.resize(Size {
+            height: size.height.saturating_sub(2),
+            width: size.width,
+        });
+        let bar_size = Size {
+            height: 1,
+            width: size.width,
+        };
         self.message_bar.resize(bar_size);
         self.status_bar.resize(bar_size);
         self.command_bar.resize(bar_size);
     }
     #[allow(clippy::arithmetic_side_effects)]
     fn handle_quit_command(&mut self) {
-        if !self.view.get_status().is_modified || self.quit_times+1 == QUIT_TIMES {
+        if !self.view.get_status().is_modified || self.quit_times + 1 == QUIT_TIMES {
             self.should_quit = true;
         } else if self.view.get_status().is_modified {
             self.update_message(&format!("WARNING: File has unsaved changes. Press Ctrl-Q {} more times to quit without saving.", QUIT_TIMES - self.quit_times - 1));
@@ -216,16 +214,16 @@ impl Editor {
         }
     }
     fn handle_save_command(&mut self) {
-        if self.view.is_file_loaded(){
+        if self.view.is_file_loaded() {
             self.save(None);
         } else {
             self.set_prompt(PromptType::Save);
         }
     }
 
-    fn process_command_during_save(&mut self, command: Command){
+    fn process_command_during_save(&mut self, command: Command) {
         match command {
-            System(Quit | Resize(_) | Search | Save) | Move(_) => {},
+            System(Quit | Resize(_) | Search | Save) | Move(_) => {}
             System(Dismiss) => {
                 self.set_prompt(PromptType::None);
                 self.update_message("Save aborted.");
@@ -251,12 +249,12 @@ impl Editor {
         }
     }
 
-    fn process_command_during_search(&mut self, command: Command){
+    fn process_command_during_search(&mut self, command: Command) {
         match command {
-            System(Dismiss)  => {
+            System(Dismiss) => {
                 self.set_prompt(PromptType::None);
                 self.view.dismiss_search();
-            },
+            }
             Edit(InsertNewline) => {
                 self.set_prompt(PromptType::None);
                 self.view.exit_search();
@@ -265,10 +263,10 @@ impl Editor {
                 self.command_bar.handle_edit_command(edit_command);
                 let query = self.command_bar.value();
                 self.view.search(&query);
-            },
+            }
             Move(Right | Down) => self.view.search_next(),
             Move(Left | Up) => self.view.search_prev(),
-            System(Quit | Resize(_) | Save| Search) | Move(_) => {},
+            System(Quit | Resize(_) | Save | Search) | Move(_) => {}
         }
     }
 
@@ -288,7 +286,8 @@ impl Editor {
             PromptType::Save => self.command_bar.set_prompt("Save as: "),
             PromptType::Search => {
                 self.view.enter_search();
-                self.command_bar.set_prompt("Search(Esc to cancel, Arrows to navigate): ");
+                self.command_bar
+                    .set_prompt("Search(Esc to cancel, Arrows to navigate): ");
             }
         }
     }

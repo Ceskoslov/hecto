@@ -1,10 +1,12 @@
+use crate::prelude::*;
+
 use std::cmp::min;
 
 use super::{AnnotatedString, AnnotatedStringPart};
 
 pub struct AnnotatedStringIterator<'a> {
     pub annotated_string: &'a AnnotatedString,
-    pub current_idx: usize,
+    pub current_idx: ByteIdx,
 }
 
 impl<'a> Iterator for AnnotatedStringIterator<'a> {
@@ -18,15 +20,11 @@ impl<'a> Iterator for AnnotatedStringIterator<'a> {
             .annotations
             .iter()
             .filter(|annotation| {
-                annotation.start_byte_index <= self.current_idx
-                    && self.current_idx < annotation.end_byte_index
+                annotation.start <= self.current_idx && self.current_idx < annotation.end
             })
             .last()
         {
-            let end_idx = min(
-                annotation.end_byte_index,
-                self.annotated_string.string.len(),
-            );
+            let end_idx = min(annotation.end, self.annotated_string.string.len());
             let start_idx = self.current_idx;
 
             self.current_idx = end_idx;
@@ -41,8 +39,8 @@ impl<'a> Iterator for AnnotatedStringIterator<'a> {
             .annotated_string
             .annotations
             .iter()
-            .filter(|a| a.start_byte_index > self.current_idx)
-            .map(|a| a.start_byte_index)
+            .filter(|a| a.start > self.current_idx)
+            .map(|a| a.start)
             .min()
             .unwrap_or(self.annotated_string.string.len());
 

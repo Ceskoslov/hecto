@@ -1,7 +1,10 @@
 use std::{cmp::min, io::Error};
 
+use crate::editor::RowIdx;
+use crate::prelude::*;
+
 use super::super::{
-    Col, DocumentStatus, Line, NAME, Position, Row, Size, Terminal, VERSION,
+    DocumentStatus, Line, Terminal,
     command::{Edit, Move},
 };
 
@@ -10,8 +13,6 @@ mod buffer;
 use buffer::Buffer;
 mod searchdirection;
 use searchdirection::SearchDirection;
-mod location;
-use location::Location;
 mod fileinfo;
 use fileinfo::FileInfo;
 mod searchinfo;
@@ -59,8 +60,7 @@ impl View {
             self.scroll_offset = search_info.prev_scroll_offset;
             self.scroll_text_location_into_view();
         }
-        self.search_info = None;
-        self.set_needs_redraw(true);
+        self.exit_search();
     }
 
     pub fn search(&mut self, query: &str) {
@@ -195,7 +195,7 @@ impl View {
 
     // region: Rendering
 
-    fn render_line(at: usize, line_text: &str) -> Result<(), Error> {
+    fn render_line(at: RowIdx, line_text: &str) -> Result<(), Error> {
         Terminal::print_row(at, line_text)
     }
     fn build_welcome_message(width: usize) -> String {
@@ -215,7 +215,7 @@ impl View {
 
     // region: Scrolling
 
-    fn scroll_vertically(&mut self, to: Row) {
+    fn scroll_vertically(&mut self, to: RowIdx) {
         let Size { height, .. } = self.size;
         let offset_changed = if to < self.scroll_offset.row {
             self.scroll_offset.row = to;
@@ -230,7 +230,7 @@ impl View {
             self.set_needs_redraw(true);
         }
     }
-    fn scroll_horizontally(&mut self, to: Col) {
+    fn scroll_horizontally(&mut self, to: ColIdx) {
         let Size { width, .. } = self.size;
         let offset_changed = if to < self.scroll_offset.col {
             self.scroll_offset.col = to;
@@ -366,7 +366,7 @@ impl UIComponent for View {
         self.scroll_text_location_into_view();
     }
 
-    fn draw(&mut self, origin_row: usize) -> Result<(), Error> {
+    fn draw(&mut self, origin_row: RowIdx) -> Result<(), Error> {
         let Size { height, width } = self.size;
         let end_y = origin_row.saturating_add(height);
         let top_third = height.div_ceil(3);
