@@ -93,6 +93,13 @@ impl Line {
         }
         // Create a new annotated string
         let mut result = AnnotatedString::from(&self.string);
+        
+        self.string.chars().enumerate().for_each(|(idx, ch)| {
+            if ch.is_ascii_digit(){
+                result.add_annotation(AnnotationType::Digit, idx, idx.saturating_add(1));
+            }
+        });
+
 
         // Annotate it based on the search results
         if let Some(query) = query {
