@@ -44,7 +44,7 @@ impl Buffer {
     ) -> Option<AnnotatedString> {
         self.lines
             .get(line_idx)
-            .map(|line| line.get_annotated_visible_substr(range, highlighter.get_annotations(line_idx)))
+            .map(|line| line.get_annotated_visible_substr(range, Some(&highlighter.get_annotations(line_idx))))
     }
 
     pub fn hightlight(&self, idx: LineIdx, highlighter: &mut Highlighter){
