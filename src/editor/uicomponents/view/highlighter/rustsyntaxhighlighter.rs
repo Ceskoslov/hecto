@@ -204,6 +204,21 @@ fn annotate_char(string: &str) -> Option<Annotation> {
     None
 }
 
+
+fn annotate_lifetime_specifier(string: &str) -> Option<Annotation> {
+    let mut iter = string.split_word_bound_indices();
+    if let Some((_, "\'")) = iter.next() {
+        if let Some((idx, next_word)) = iter.next() {
+            return Some(Annotation {
+                annotation_type: AnnotationType::LifetimeSpecifier,
+                start: 0,
+                end: idx.saturating_add(next_word.len()),
+            });
+        }
+    }
+    None
+}
+
 impl SyntaxHighlighter for RustSyntaxHighlighter {
     fn highlight(&mut self, idx: LineIdx, line: &Line) {
         let mut result = Vec::new();
@@ -215,6 +230,7 @@ impl SyntaxHighlighter for RustSyntaxHighlighter {
                 .or_else(|| annotate_keyword(remainder))
                 .or_else(|| annotate_type(remainder))
                 .or_else(|| annotate_known_value(remainder))
+                .or_else(|| annotate_lifetime_specifier(remainder))
             {
                 annotation.shift(start_idx);
                 result.push(annotation);
