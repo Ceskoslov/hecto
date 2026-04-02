@@ -9,3 +9,10 @@ pub struct Annotation {
     pub start: ByteIdx,
     pub end: ByteIdx,
 }
+
+impl Annotation {
+    pub fn shift(&mut self, offset: ByteIdx) {
+        self.start = self.start.saturating_add(offset);
+        self.end = self.end.saturating_add(offset);
+    }
+}
