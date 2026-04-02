@@ -4,10 +4,11 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// 文件信息：记录当前编辑文件的路径和类型
 #[derive(Default, Debug)]
 pub struct FileInfo {
-    path: Option<PathBuf>,
-    file_type: FileType,
+    path: Option<PathBuf>,   // 文件路径（新文件为 None）
+    file_type: FileType,     // 文件类型（茎展名推断）
 }
 
 impl FileInfo {

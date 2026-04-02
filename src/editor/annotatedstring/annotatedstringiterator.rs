@@ -4,9 +4,11 @@ use std::cmp::min;
 
 use super::{AnnotatedString, AnnotatedStringPart};
 
+/// 带注解字符串的迭代器
+/// 按注解边界将字符串分割为多个片段，每次返回一个带注解类型的子串
 pub struct AnnotatedStringIterator<'a> {
     pub annotated_string: &'a AnnotatedString,
-    pub current_idx: ByteIdx,
+    pub current_idx: ByteIdx,  // 当前遍历到的字节位置
 }
 
 impl<'a> Iterator for AnnotatedStringIterator<'a> {

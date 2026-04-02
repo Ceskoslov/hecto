@@ -1,13 +1,14 @@
 use crate::prelude::*;
 use super::FileType;
 
+/// 文档状态：保存当前文件的元信息，供状态栏显示使用
 #[derive(Default, Eq, PartialEq, Debug)]
 pub struct DocumentStatus {
-    pub total_lines: usize,
-    pub current_line_idx: LineIdx,
-    pub is_modified: bool,
-    pub file_name: String,
-    pub file_type: FileType,
+    pub total_lines: usize,          // 文档总行数
+    pub current_line_idx: LineIdx,   // 当前光标所在行
+    pub is_modified: bool,           // 文档是否已修改
+    pub file_name: String,           // 文件名
+    pub file_type: FileType,         // 文件类型
 }
 
 impl DocumentStatus {

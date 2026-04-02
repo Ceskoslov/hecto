@@ -2,11 +2,13 @@ use crossterm::style::Color;
 
 use super::super::AnnotationType;
 
+/// 终端显示属性：将注解类型映射为前景/背景颜色
 pub struct Attribute {
-    pub foreground: Option<Color>,
-    pub background: Option<Color>,
+    pub foreground: Option<Color>,  // 前景色
+    pub background: Option<Color>,  // 背景色
 }
 
+/// 将注解类型转换为具体的 RGB 颜色配置
 impl From<AnnotationType> for Attribute {
     fn from(annotation_type: AnnotationType) -> Self {
         match annotation_type {

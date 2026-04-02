@@ -1,3 +1,6 @@
+//! 高亮系统：协调语法高亮和搜索结果高亮
+//! 采用策略模式，根据文件类型动态选择语法高亮器
+
 use super::super::super::{Annotation, AnnotationType, FileType, Line};
 use crate::prelude::*;
 mod syntaxhighlighter;
@@ -7,6 +10,7 @@ mod rustsyntaxhighlighter;
 mod searchresulthighlighter;
 use rustsyntaxhighlighter::RustSyntaxHighlighter;
 
+/// 根据文件类型创建对应的语法高亮器（工厂方法）
 fn create_syntax_highlighter(file_type: FileType) -> Option<Box<dyn SyntaxHighlighter>> {
     match file_type {
         FileType::Rust => Some(Box::<RustSyntaxHighlighter>::default()),
@@ -14,10 +18,11 @@ fn create_syntax_highlighter(file_type: FileType) -> Option<Box<dyn SyntaxHighli
     }
 }
 
+/// 高亮器：组合语法高亮和搜索结果高亮
 #[derive(Default)]
 pub struct Highlighter<'a> {
-    syntax_highlighter: Option<Box<dyn SyntaxHighlighter>>,
-    search_result_highlighter: Option<SearchResultHighlighter<'a>>,
+    syntax_highlighter: Option<Box<dyn SyntaxHighlighter>>,              // 语法高亮器（可选）
+    search_result_highlighter: Option<SearchResultHighlighter<'a>>,      // 搜索结果高亮器（可选）
 }
 
 impl<'a> Highlighter<'a> {
@@ -33,6 +38,7 @@ impl<'a> Highlighter<'a> {
             search_result_highlighter,
         }
     }
+    /// 获取指定行的所有注解（合并语法高亮和搜索高亮）
     pub fn get_annotations(&self, idx: LineIdx) -> Vec<Annotation> {
         let mut result = Vec::new();
 

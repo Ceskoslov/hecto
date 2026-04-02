@@ -9,8 +9,10 @@ use super::super::Terminal;
 
 use super::UIComponent;
 
+/// 消息默认显示时长（5 秒）
 const DEFAULT_DURATION: Duration = Duration::new(5, 0);
 
+/// 带时间戳的消息，到期后自动消失
 struct Message {
     text: String,
     time: Instant,
@@ -31,6 +33,7 @@ impl Message {
     }
 }
 
+/// 消息栏：显示帮助提示和警告信息，消息到期后自动清除
 #[derive(Default)]
 pub struct MessageBar {
     current_message: Message,

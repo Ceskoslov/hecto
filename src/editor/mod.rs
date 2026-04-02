@@ -1,3 +1,5 @@
+//! 编辑器核心模块：协调所有 UI 组件，处理用户输入和事件循环
+
 use crate::prelude::*;
 use crossterm::event::{Event, KeyEvent, KeyEventKind, read};
 use std::{
@@ -5,12 +7,19 @@ use std::{
     io::Error,
     panic::{set_hook, take_hook},
 };
+// 带注解的字符串系统，用于语法高亮和搜索结果高亮
 mod annotatedstring;
+// 注解类型枚举（匹配、关键字、类型、注释等）
 pub mod annotationtype;
+// 命令解析模块，将键盘事件转化为编辑器命令
 mod command;
+// 文档状态（文件名、是否修改、光标位置等）
 mod documentstatus;
+// 行处理模块，处理 Unicode 字素簇的编辑、搜索和显示
 mod line;
+// 终端抽象层，封装 crossterm 的底层操作
 mod terminal;
+// UI 组件集合（视图、状态栏、命令栏、消息栏）
 mod uicomponents;
 pub use annotationtype::AnnotationType;
 mod annotation;
@@ -32,14 +41,16 @@ use self::command::{
     System::{Dismiss, Quit, Resize, Save, Search},
 };
 
+/// 连续退出所需的次数（未保存时防止误触退出）
 const QUIT_TIMES: u8 = 3;
 
+/// 提示模式：控制底部命令栏的用途
 #[derive(Eq, PartialEq, Default)]
 enum PromptType {
-    Search,
-    Save,
+    Search,  // 搜索模式
+    Save,    // 另存为模式
     #[default]
-    None,
+    None,    // 正常编辑模式
 }
 
 impl PromptType {
@@ -48,21 +59,24 @@ impl PromptType {
     }
 }
 
+/// 编辑器主结构体：管理所有 UI 组件和编辑状态
 #[derive(Default)]
 pub struct Editor {
-    should_quit: bool,
-    view: View,
-    status_bar: StatusBar,
-    message_bar: MessageBar,
-    command_bar: CommandBar,
-    prompt_type: PromptType,
-    terminal_size: Size,
-    title: String,
-    quit_times: u8,
+    should_quit: bool,          // 是否退出主循环
+    view: View,                 // 文本编辑视图（占据主要屏幕区域）
+    status_bar: StatusBar,      // 状态栏（显示文件信息）
+    message_bar: MessageBar,    // 消息栏（显示帮助提示）
+    command_bar: CommandBar,    // 命令栏（搜索/保存时的输入框）
+    prompt_type: PromptType,    // 当前提示模式
+    terminal_size: Size,        // 终端尺寸
+    title: String,              // 终端标题
+    quit_times: u8,             // 剩余需要按几次 Ctrl-Q 才能强制退出
 }
 
 impl Editor {
+    /// 创建编辑器实例：初始化终端、设置 panic hook、加载命令行指定的文件
     pub fn new() -> Result<Self, Error> {
+        // 保存原始的 panic hook，并设置新的 hook 在 panic 时恢复终端状态
         let current_hook = take_hook();
         set_hook(Box::new(move |panic_info| {
             let _ = Terminal::terminate();
@@ -84,6 +98,7 @@ impl Editor {
         Ok(editor)
     }
 
+    /// 主事件循环：不断刷新屏幕、读取用户输入、处理命令
     pub fn run(&mut self) {
         loop {
             self.refresh_screen();
@@ -107,6 +122,7 @@ impl Editor {
         }
     }
 
+    /// 刷新屏幕：按顺序渲染底部栏、状态栏、主视图，然后移动光标
     fn refresh_screen(&mut self) {
         if self.terminal_size.height == 0 || self.terminal_size.width == 0 {
             return;
@@ -148,6 +164,7 @@ impl Editor {
             self.title = title;
         }
     }
+    /// 评估终端事件：只处理按键和窗口大小变化事件
     fn evaluate_event(&mut self, event: Event) {
         let should_process = match &event {
             Event::Key(KeyEvent { kind, .. }) => kind == &KeyEventKind::Press,
@@ -162,6 +179,7 @@ impl Editor {
         }
     }
 
+    /// 命令分发：根据当前提示模式将命令路由到不同的处理函数
     fn process_command(&mut self, command: Command) {
         if let System(Resize(size)) = command {
             self.handle_resize_command(size);
@@ -174,6 +192,7 @@ impl Editor {
         }
     }
 
+    /// 处理普通模式下的命令：移动、编辑、保存、搜索、退出
     fn process_command_no_prompt(&mut self, command: Command) {
         if matches!(command, System(Quit)) {
             self.handle_quit_command();
@@ -189,6 +208,7 @@ impl Editor {
         }
     }
 
+    /// 处理窗口大小变化：重新计算各组件的尺寸
     fn handle_resize_command(&mut self, size: Size) {
         self.terminal_size = size;
         self.view.resize(Size {
@@ -203,6 +223,7 @@ impl Editor {
         self.status_bar.resize(bar_size);
         self.command_bar.resize(bar_size);
     }
+    /// 处理退出命令：未保存时需连续按 Ctrl-Q 多次确认
     #[allow(clippy::arithmetic_side_effects)]
     fn handle_quit_command(&mut self) {
         if !self.view.get_status().is_modified || self.quit_times + 1 == QUIT_TIMES {
@@ -255,6 +276,7 @@ impl Editor {
         }
     }
 
+    /// 处理搜索模式下的命令：Esc 取消、Enter 确认、箭头键导航、字符输入更新搜索
     fn process_command_during_search(&mut self, command: Command) {
         match command {
             System(Dismiss) => {
@@ -284,6 +306,7 @@ impl Editor {
         !self.prompt_type.is_none()
     }
 
+    /// 设置提示模式并配置命令栏提示文字
     fn set_prompt(&mut self, prompt_type: PromptType) {
         self.prompt_type = prompt_type;
         self.command_bar.clear_value();

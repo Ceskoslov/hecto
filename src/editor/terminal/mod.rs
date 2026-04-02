@@ -1,3 +1,6 @@
+//! 终端抽象层：封装 crossterm 库的底层操作
+//! 提供屏幕清除、光标移动、文本打印、颜色设置等统一接口
+
 mod attribute;
 use crate::prelude::*;
 

@@ -2,6 +2,7 @@ use super::{Annotation, AnnotationType, Line, SyntaxHighlighter};
 use crate::prelude::*;
 use unicode_segmentation::UnicodeSegmentation;
 
+/// Rust 关键字列表（包含保留关键字）
 const KEYWORDS: [&str; 52] = [
     "break",
     "const",
@@ -56,18 +57,22 @@ const KEYWORDS: [&str; 52] = [
     "macro_rules",
     "union",
 ];
+/// Rust 内置类型列表
 const TYPES: [&str; 22] = [
     "i8", "i16", "i32", "i64", "i128", "isize", "u8", "u16", "u32", "u64", "u128", "usize", "f32",
     "f64", "bool", "char", "Option", "Result", "String", "str", "Vec", "HashMap",
 ];
 
+/// Rust 已知值列表（Some, None, true, false, Ok, Err）
 const KNOWN_VALUES: [&str; 6] = ["Some", "None", "true", "false", "Ok", "Err"];
 
+/// Rust 语法高亮器：支持关键字、类型、数字、字符串、注释、生命周期等语法元素的高亮
+/// 支持跨行多行注释和跨行字符串的状态跟踪
 #[derive(Default)]
 pub struct RustSyntaxHighlighter {
-    highlights: Vec<Vec<Annotation>>,
-    ml_comment_balance: usize,
-    in_ml_string: bool,
+    highlights: Vec<Vec<Annotation>>,   // 每行的注解结果
+    ml_comment_balance: usize,          // 多行注释嵌套深度计数器
+    in_ml_string: bool,                 // 是否在多行字符串中
 }
 impl RustSyntaxHighlighter {
     fn annotate_ml_comment(&mut self, string: &str) -> Option<Annotation> {

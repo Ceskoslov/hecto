@@ -1,6 +1,8 @@
+//! 行处理模块：封装单行文本的存储、编辑、搜索和显示逻辑
+//! 核心设计：同时维护原始字符串和字素簇片段列表，以正确处理 Unicode
+
 use crate::prelude::*;
 use std::{
-    cmp::min,
     fmt::{self, Display},
     ops::{Deref, Range},
 };
@@ -14,13 +16,17 @@ use unicode_width::UnicodeWidthStr;
 
 use super::{AnnotatedString, Annotation};
 
+/// 行：单行文本的核心数据结构
+/// 内部同时维护原始字符串和解析后的字素簇片段列表
+/// 支持 Unicode 字素簇感知的编辑和显示
 #[derive(Default, Clone)]
 pub struct Line {
-    fragments: Vec<TextFragment>,
-    string: String,
+    fragments: Vec<TextFragment>,  // 字素簇片段列表（用于导航和显示）
+    string: String,                // 原始字符串（用于存储和搜索）
 }
 
 impl Line {
+    /// 从字符串创建行，解析出所有字素簇片段
     pub fn from(line_str: &str) -> Self {
         Self {
             fragments: Self::str_to_fragments(line_str),
@@ -28,6 +34,8 @@ impl Line {
         }
     }
 
+    /// 将字符串解析为字素簇片段列表
+    /// 每个片段记录：字节倿移、字素簇内容、替换字符、渲染宽度
     fn str_to_fragments(line_str: &str) -> Vec<TextFragment> {
         line_str
             .grapheme_indices(true)
@@ -58,6 +66,8 @@ impl Line {
         self.fragments = Self::str_to_fragments(&self.string);
     }
 
+    /// 为不可见或特殊字符获取替换显示字符
+    /// Tab -> 空格，控制字符 -> ▯，零宽字符 -> .
     fn get_replacement_character(for_str: &str) -> Option<char> {
         let width = for_str.width();
         match for_str {
@@ -82,6 +92,8 @@ impl Line {
             .to_string()
     }
 
+    /// 获取带注解的可见子串，处理截断、替换字符和注解偏移
+    /// range: 可见列范围，annotations: 语法高亮/搜索注解
     pub fn get_annotated_visible_substr(
         &self,
         range: Range<ColIdx>,
@@ -165,6 +177,7 @@ impl Line {
         self.width_until(self.grapheme_count())
     }
     // Inserts a character into the line, or appends it at the end if at == grapheme_count + 1
+    /// 在指定字素簇位置插入字符，并重建片段列表
     pub fn insert_char(&mut self, character: char, at: GraphemeIdx) {
         debug_assert!(at.saturating_sub(1) <= self.grapheme_count());
         if let Some(fragment) = self.fragments.get(at) {
@@ -265,6 +278,7 @@ impl Line {
             .last()
             .map(|(_, grapheme_idx)| *grapheme_idx)
     }
+    /// 在指定字节范围内搜索全部匹配，返回 (ByteIdx, GraphemeIdx) 对
     pub fn find_all(&self, query: &str, range: Range<ByteIdx>) -> Vec<(ByteIdx, GraphemeIdx)> {
         let end = range.end;
         let start = range.start;
@@ -280,6 +294,8 @@ impl Line {
         })
     }
 
+    /// 验证字节级匹配是否与字素簇边界对齐
+    /// 防止匹配到多字节字符的中间位置
     fn match_graphme_clusters(
         &self,
         matches: &[ByteIdx],

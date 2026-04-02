@@ -1,3 +1,6 @@
+//! 文本缓冲区：存储和管理编辑中的文档内容
+//! 提供文件读写、文本编辑、搜索和高亮接口
+
 use super::super::super::AnnotatedString;
 use super::FileInfo;
 use super::Highlighter;
@@ -8,11 +11,12 @@ use std::io::Error;
 use std::io::Write;
 use std::ops::Range;
 
+/// 文本缓冲区：以行为单位存储整个文档
 #[derive(Default)]
 pub struct Buffer {
-    lines: Vec<Line>,
-    file_info: FileInfo,
-    dirty: bool,
+    lines: Vec<Line>,       // 文档的所有行
+    file_info: FileInfo,    // 文件信息（路径、类型）
+    dirty: bool,            // 是否有未保存的修改
 }
 
 impl Buffer {
@@ -53,6 +57,7 @@ impl Buffer {
         }
     }
 
+    /// 从文件加载内容，逐行解析为 Line 对象
     pub fn load(file_name: &str) -> Result<Self, Error> {
         let contents = read_to_string(file_name)?;
         let mut lines = Vec::new();
@@ -65,6 +70,7 @@ impl Buffer {
             dirty: false,
         })
     }
+    /// 向前搜索：从指定位置开始循环搜索整个文档
     pub fn search_forward(&self, query: &str, from: Location) -> Option<Location> {
         if query.is_empty() {
             return None;
@@ -93,6 +99,7 @@ impl Buffer {
         }
         None
     }
+    /// 向后搜索：从指定位置开始反向循环搜索整个文档
     pub fn search_backward(&self, query: &str, from: Location) -> Option<Location> {
         if query.is_empty() {
             return None;

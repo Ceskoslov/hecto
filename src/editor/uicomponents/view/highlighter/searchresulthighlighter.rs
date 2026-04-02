@@ -3,11 +3,12 @@ use std::collections::HashMap;
 use super::{syntaxhighlighter::SyntaxHighlighter, Annotation, AnnotationType, Line};
 use crate::prelude::*;
 
+/// 搜索结果高亮器：高亮所有匹配项，并特殊标记当前选中的匹配
 #[derive(Default)]
 pub struct SearchResultHighlighter<'a> {
-    matched_word: &'a str,
-    selected_match: Option<Location>,
-    highlights: HashMap<LineIdx, Vec<Annotation>>,
+    matched_word: &'a str,                        // 搜索关键词
+    selected_match: Option<Location>,             // 当前选中的匹配位置
+    highlights: HashMap<LineIdx, Vec<Annotation>>, // 每行的高亮注解缓存
 }
 
 impl<'a> SearchResultHighlighter<'a> {

@@ -5,13 +5,14 @@ use crossterm::event::{
     KeyEvent, KeyModifiers,
 };
 
+/// 系统命令：保存、退出、搜索、取消、窗口大小调整
 #[derive(Clone, Copy)]
 pub enum System {
-    Save,
-    Quit,
-    Resize(Size),
-    Dismiss,
-    Search,
+    Save,          // Ctrl-S 保存
+    Quit,          // Ctrl-Q 退出
+    Resize(Size),  // 窗口大小变化
+    Dismiss,       // Esc 取消/关闭提示
+    Search,        // Ctrl-F 搜索
 }
 
 impl TryFrom<KeyEvent> for System {

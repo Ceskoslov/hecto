@@ -6,9 +6,10 @@ use super::super::{DocumentStatus, Terminal};
 
 use super::UIComponent;
 
+/// 状态栏：在倒数第二行显示文件名、行数、修改状态、文件类型、光标位置
 #[derive(Default)]
 pub struct StatusBar {
-    current_status: DocumentStatus,
+    current_status: DocumentStatus, // 当前文档状态
     needs_redraw: bool,
     size: Size,
 }

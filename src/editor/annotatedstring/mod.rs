@@ -1,3 +1,6 @@
+//! 带注解的字符串：将文本内容与显示注解（语法高亮、搜索匹配）绑定在一起
+//! 支持截断、替换操作时自动调整注解位置
+
 use std::{
     cmp::{max, min},
     fmt::{self, Display},
@@ -10,10 +13,11 @@ pub use annotatedstringiterator::AnnotatedStringIterator;
 
 use super::ByteIdx;
 
+/// 带注解的字符串：存储原始文本和其上的注解列表
 #[derive(Debug, Default)]
 pub struct AnnotatedString {
-    string: String,
-    annotations: Vec<Annotation>,
+    string: String,                  // 原始文本内容
+    annotations: Vec<Annotation>,    // 注解列表（各种高亮区间）
 }
 
 impl AnnotatedString {
@@ -48,6 +52,8 @@ impl AnnotatedString {
         self.replace(from, self.string.len(), "");
     }
 
+    /// 替换指定字节范围的内容，并自动调整所有注解的偏移位置
+    /// 这是维护注解一致性的关键方法
     pub fn replace(&mut self, start: ByteIdx, end: ByteIdx, new_string: &str) {
         let end = min(end, self.string.len());
         debug_assert!(start <= end);

@@ -5,12 +5,13 @@ use crate::prelude::*;
 use super::super::{Line, Terminal, command::Edit};
 use super::UIComponent;
 
+/// 命令栏：底部输入区域，用于搜索和另存为时的文本输入
 #[derive(Default)]
 pub struct CommandBar {
-    prompt: String,
-    value: Line,
-    needs_redraw: bool,
-    size: Size,
+    prompt: String,      // 提示文字（如 "Search: "）
+    value: Line,         // 用户输入的内容
+    needs_redraw: bool,  // 是否需要重绘
+    size: Size,          // 组件尺寸
 }
 
 impl CommandBar {

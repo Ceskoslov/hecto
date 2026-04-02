@@ -1,8 +1,11 @@
 use crate::prelude::*;
 use std::io::Error;
 
+/// UI 组件 trait：所有界面组件的公共接口
+/// 提供统一的重绘标记、尺寸调整和渲染机制
 pub trait UIComponent {
     fn set_needs_redraw(&mut self, value: bool);
+    #[allow(dead_code)]
     fn needs_redraw(&self) -> bool;
     fn resize(&mut self, size: Size) {
         self.set_size(size);

@@ -3,12 +3,13 @@ use crossterm::event::{
     KeyEvent, KeyModifiers,
 };
 
+/// 编辑命令：插入字符、换行、删除等基本文本操作
 #[derive(Clone, Copy)]
 pub enum Edit {
-    Insert(char),
-    InsertNewline,
-    Delete,
-    DeleteBackward,
+    Insert(char),      // 插入字符
+    InsertNewline,     // 插入新行
+    Delete,            // 向前删除
+    DeleteBackward,    // 向后删除（退格）
 }
 
 impl TryFrom<KeyEvent> for Edit {

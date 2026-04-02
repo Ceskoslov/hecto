@@ -1,3 +1,6 @@
+//! 视图模块：编辑器的核心显示区域
+//! 负责文本渲染、光标移动、滚动、搜索、文件加载保存
+
 use std::{cmp::min, io::Error};
 
 use crate::editor::RowIdx;
@@ -20,14 +23,15 @@ use fileinfo::FileInfo;
 mod searchinfo;
 use searchinfo::SearchInfo;
 
+/// 视图：编辑器的核心组件，管理文本缓冲区、光标位置和滚动偏移
 #[derive(Default)]
 pub struct View {
-    buffer: Buffer,
-    needs_redraw: bool,
-    size: Size,
-    text_location: Location,
-    scroll_offset: Position,
-    search_info: Option<SearchInfo>,
+    buffer: Buffer,                    // 文本缓冲区
+    needs_redraw: bool,                // 是否需要重绘
+    size: Size,                        // 视图尺寸
+    text_location: Location,           // 光标在文本中的逻辑位置
+    scroll_offset: Position,           // 滚动偏移量
+    search_info: Option<SearchInfo>,   // 搜索状态信息
 }
 
 impl View {
