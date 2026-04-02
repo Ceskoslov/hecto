@@ -16,6 +16,8 @@ pub use annotationtype::AnnotationType;
 mod annotation;
 pub use annotation::Annotation;
 
+mod filetype;
+use filetype::FileType;
 use annotatedstring::{AnnotatedString};
 use documentstatus::DocumentStatus;
 use line::Line;
