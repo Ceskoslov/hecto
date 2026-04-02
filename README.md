@@ -1,21 +1,5 @@
 # Hecto —— 用 Rust 从零构建的终端文本编辑器
 
-> 基于教程 [hecto-tutorial](https://github.com/pflenker/hecto-tutorial) 构建
-
-### 快捷键
-
-| 快捷键 | 功能 |
-|--------|------|
-| `Ctrl-S` | 保存文件 |
-| `Ctrl-Q` | 退出（未保存时需按 3 次确认） |
-| `Ctrl-F` | 搜索（输入关键词，方向键导航，Esc 取消，Enter 确认） |
-| 方向键 | 移动光标 |
-| `Home` / `End` | 行首 / 行尾 |
-| `PageUp` / `PageDown` | 上翻页 / 下翻页 |
-| `Esc` | 取消当前操作 |
-
----
-
 ## 项目架构
 
 ```
