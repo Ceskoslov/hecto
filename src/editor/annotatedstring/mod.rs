@@ -2,10 +2,7 @@ use std::{
     cmp::{max, min},
     fmt::{self, Display},
 };
-pub mod annotationtype;
-pub use annotationtype::AnnotationType;
-mod annotation;
-use annotation::Annotation;
+use super::{AnnotationType, Annotation};
 mod annotatedstringpart;
 pub use annotatedstringpart::AnnotatedStringPart;
 mod annotatedstringiterator;
