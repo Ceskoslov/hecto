@@ -4,6 +4,68 @@ use unicode_segmentation::UnicodeSegmentation;
 use super::{Annotation, AnnotationType, Line, SyntaxHighlighter};
 use crate::prelude::*;
 
+const KEYWORDS: [&str; 52] = [
+    "break",
+    "const",
+    "continue",
+    "crate",
+    "else",
+    "enum",
+    "extern",
+    "false",
+    "fn",
+    "for",
+    "if",
+    "impl",
+    "in",
+    "let",
+    "loop",
+    "match",
+    "mod",
+    "move",
+    "mut",
+    "pub",
+    "ref",
+    "return",
+    "self",
+    "Self",
+    "static",
+    "struct",
+    "super",
+    "trait",
+    "true",
+    "type",
+    "unsafe",
+    "use",
+    "where",
+    "while",
+    "async",
+    "await",
+    "dyn",
+    "abstract",
+    "become",
+    "box",
+    "do",
+    "final",
+    "macro",
+    "override",
+    "priv",
+    "typeof",
+    "unsized",
+    "virtual",
+    "yield",
+    "try",
+    "macro_rules",
+    "union",
+];
+const TYPES: [&str; 22] = [
+    "i8", "i16", "i32", "i64", "i128", "isize", "u8", "u16", "u32", "u64", "u128", "usize", "f32",
+    "f64", "bool", "char", "Option", "Result", "String", "str", "Vec", "HashMap",
+];
+
+const KNOWN_VALUES: [&str; 6] = ["Some", "None", "true", "false", "Ok", "Err"];
+
+
 #[derive(Default)]
 pub struct RustSyntaxHighlighter {
     highlights: HashMap<LineIdx, Vec<Annotation>>,
@@ -82,11 +144,22 @@ impl SyntaxHighlighter for RustSyntaxHighlighter {
     fn highlight(&mut self, idx: LineIdx, line: &Line) {
         let mut result = Vec::new();
         for (start_idx, word) in line.split_word_bound_indices(){
+            let mut annotation_type = None;
             if is_valid_number(word) {
+                annotation_type = Some(AnnotationType::Number);
+            } else if KEYWORDS.contains(&word) {
+                annotation_type = Some(AnnotationType::Keyword);
+            } else if TYPES.contains(&word) {
+                annotation_type = Some(AnnotationType::Type);
+            } else if KNOWN_VALUES.contains(&word) {
+                annotation_type = Some(AnnotationType::KnownValue);
+            }
+
+            if let Some(annotation_type) = annotation_type {
                 result.push(Annotation {
                     start: start_idx,
                     end: start_idx.saturating_add(word.len()),
-                    annotation_type: AnnotationType::Number,
+                    annotation_type,
                 });
             }
         }
